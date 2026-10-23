@@ -7,14 +7,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: unzip -q ClientMod_lite.zip
+      - name: Unpack ClientMod-1.zip
+        id: p
+        run: |
+          unzip -q ClientMod-1.zip -d tmp
+          mv tmp/ClientMod ClientMod
+          if grep -q '8.5.2' ClientMod/build.gradle.kts; then
+            echo "g=8.9" >> $GITHUB_OUTPUT
+          else
+            echo "g=7.5.1" >> $GITHUB_OUTPUT
+          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 7.5.1
+          gradle-version: ${{ steps.p.outputs.g }}
       - run: cd ClientMod && gradle :app:assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
